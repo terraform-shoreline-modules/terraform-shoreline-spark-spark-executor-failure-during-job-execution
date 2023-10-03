@@ -1,0 +1,130 @@
+{
+  "name": "spark_executor_failure_during_job_execution",
+  "description": "This incident type refers to a failure in one or more Spark executors during the execution of a job. Spark executors are worker processes that run computations and store data in memory or on disk. When an executor fails, it can cause the entire job to fail or result in degraded performance. This type of incident can occur for a variety of reasons, such as hardware or network issues, memory errors, or software bugs.",
+  "params": [
+    {
+      "name": "DRIVER_ID",
+      "value": ""
+    },
+    {
+      "name": "EXECUTOR_ID",
+      "value": ""
+    },
+    {
+      "name": "MASTER_URL",
+      "value": ""
+    },
+    {
+      "name": "EXECUTOR_MEMORY",
+      "value": ""
+    },
+    {
+      "name": "DISK_LIMIT",
+      "value": ""
+    },
+    {
+      "name": "EXECUTOR_CORES",
+      "value": ""
+    },
+    {
+      "name": "APPLICATION_ID",
+      "value": ""
+    },
+    {
+      "name": "SPARK_HOME",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Spark executor failure during job execution.\nThis incident type refers to a failure in one or more Spark executors during the execution of a job. Spark executors are worker processes that run computations and store data in memory or on disk. When an executor fails, it can cause the entire job to fail or result in degraded performance. This type of incident can occur for a variety of reasons, such as hardware or network issues, memory errors, or software bugs."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Spark application"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `${SPARK_HOME}/bin/spark-submit --master ${MASTER_URL} --status ${APPLICATION_ID}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## View the logs for the failed executor"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `${SPARK_HOME}/bin/spark-submit --master ${MASTER_URL} --logs ${APPLICATION_ID} ${EXECUTOR_ID}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the resource usage of the executor"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `${SPARK_HOME}/bin/spark-submit --master ${MASTER_URL} --metrics ${APPLICATION_ID} --executor-id ${EXECUTOR_ID} --driver-id ${DRIVER_ID}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the system logs for any relevant error messages"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `journalctl -u spark.service | grep ERROR`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Insufficient resources allocated to the Spark executor leading to failure during job execution."
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_spark_executor_avail_check($EXECUTOR_MEMORY, $EXECUTOR_CORES)"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the executor has sufficient resources such as memory, CPU cores, and disk space. Increase the resources if necessary."
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_resource_limits($EXECUTOR_MEMORY, $DISK_LIMIT, $EXECUTOR_CORES, $SPARK_HOME)"
+    }
+  ]
+}
